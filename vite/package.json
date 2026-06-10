@@ -10,13 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@dzapio/sdk": "^1.0.1",
-    "@wagmi/core": "2.17.0",
+    "@dzapio/sdk": "2.0.39",
+    "@wagmi/core": "3.4.0",
     "ethers": "5.7.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "viem": "2.33.3",
-    "wagmi": "2.16.0"
+    "viem": "2.46.3",
+    "wagmi": "3.5.0"
   },
   "devDependencies": {
     "@radix-ui/themes": "^3.0.5",
