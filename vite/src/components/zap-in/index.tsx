@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSwitchChain, useWalletClient } from "wagmi";
 import { useZapInSelection } from "../../hooks/useZapInSelection";
 import { useZapQuote } from "../../hooks/useZapQuote";
-import { executeZap, formatZapResult, prepareZapIn } from "../../lib/zap";
+import { executeZap, formatZapResult, fetchZapInQuote } from "../../lib/zap";
 import type { DZapSigner } from "../../types/zap";
 import ZapInForm from "../zap/ZapInForm";
 import ZapPageLayout from "../zap/ZapPageLayout";
@@ -19,7 +19,7 @@ const ZapIn = () => {
     prepared,
     loading: quoteLoading,
     error: quoteError,
-  } = useZapQuote(selection.zapInParams, prepareZapIn);
+  } = useZapQuote(selection.zapInParams, fetchZapInQuote);
 
   const handleExecute = async () => {
     if (!prepared || !walletClient) return;

@@ -167,7 +167,7 @@ export async function executeZap(
 }
 
 /** A built request paired with its quote, ready to show and then execute. */
-export type PreparedZap = {
+export type ZapQuoteWithRequest = {
   request: ZapExecutionRequest;
   quote: ZapQuoteResponse;
 };
@@ -176,7 +176,7 @@ export type PreparedZap = {
  * Zap In quote step — derive the pool tick range, build the request, and fetch
  * a quote. Read-only: no approvals or signatures. Run this before confirming.
  */
-export async function prepareZapIn(params: ZapInParams): Promise<PreparedZap> {
+export async function fetchZapInQuote(params: ZapInParams): Promise<ZapQuoteWithRequest> {
   const poolDetails = await derivePoolTickRange(params.pool);
   const request = buildZapInRequest(params, poolDetails);
   const quote = await dZap.getZapQuote(request);
@@ -184,7 +184,7 @@ export async function prepareZapIn(params: ZapInParams): Promise<PreparedZap> {
 }
 
 /** Zap Out quote step — build the request and fetch a quote (read-only). */
-export async function prepareZapOut(params: ZapOutParams): Promise<PreparedZap> {
+export async function fetchZapOutQuote(params: ZapOutParams): Promise<ZapQuoteWithRequest> {
   const request = buildZapOutRequest(params);
   const quote = await dZap.getZapQuote(request);
   return { request, quote };
