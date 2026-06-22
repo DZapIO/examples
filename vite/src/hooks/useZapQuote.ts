@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { PreparedZap } from "../lib/zap";
+import type { ZapQuoteWithRequest } from "../lib/zap";
 
 /**
  * Fetches a zap quote whenever the (memoized) params change. Returns the
@@ -8,9 +8,9 @@ import type { PreparedZap } from "../lib/zap";
  */
 export function useZapQuote<TParams>(
   params: TParams | null,
-  prepare: (params: TParams) => Promise<PreparedZap>
+  prepare: (params: TParams) => Promise<ZapQuoteWithRequest>
 ) {
-  const [prepared, setPrepared] = useState<PreparedZap | null>(null);
+  const [prepared, setPrepared] = useState<ZapQuoteWithRequest | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
