@@ -15,7 +15,7 @@ export function useTradeSelection() {
   const { switchChainAsync } = useSwitchChain();
 
   const [sourceChainId, setSourceChainId] = useState<number>(DEFAULT_CHAIN.id);
-  const [destChainId, setDestChainId] = useState<number | null>(null);
+  const [destChainId, setDestChainId] = useState<number>(DEFAULT_CHAIN.id);
   const [srcTokenAddress, setSrcTokenAddress] = useState<string | null>(null);
   const [destTokenAddress, setDestTokenAddress] = useState<string | null>(null);
   const [amountPreset, setAmountPreset] = useState<AmountPreset>("100");
@@ -73,12 +73,6 @@ export function useTradeSelection() {
   }, [account, isConnected, sourceChainId]);
 
   useEffect(() => {
-    if (!destChainId) {
-      setDestTokens([]);
-      setDestTokenAddress(null);
-      return;
-    }
-
     let cancelled = false;
     setLoadingDestTokens(true);
     setFetchError("");
@@ -177,13 +171,7 @@ export function useTradeSelection() {
   }, [amountPreset, customAmount, selectedSrcToken]);
 
   const tradeParams: TradeParams | null = useMemo(() => {
-    if (
-      !account ||
-      !selectedSrcToken ||
-      !selectedDestToken ||
-      destChainId === null ||
-      !computedAmount
-    ) {
+    if (!account || !selectedSrcToken || !selectedDestToken || !computedAmount) {
       return null;
     }
 

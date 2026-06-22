@@ -1,8 +1,16 @@
-import { arbitrum, base, optimism, polygon } from "viem/chains";
+import { arbitrum, base, mainnet, optimism, polygon } from "viem/chains";
 
-export const SUPPORTED_CHAINS = [base, polygon, optimism, arbitrum] as const;
+export const SUPPORTED_CHAINS = [
+  base,
+  polygon,
+  optimism,
+  arbitrum,
+  mainnet,
+] as const;
 
-export const SUPPORTED_CHAIN_IDS: number[] = SUPPORTED_CHAINS.map((chain) => chain.id);
+export const SUPPORTED_CHAIN_IDS: number[] = SUPPORTED_CHAINS.map(
+  (chain) => chain.id
+);
 
 export const DEFAULT_CHAIN = base;
 

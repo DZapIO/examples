@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useSwitchChain, useWalletClient } from "wagmi";
-import { executeGasTrade, formatTradeResult } from "../../lib/trade";
+import {
+  executeGasTrade,
+  formatTradeResult,
+  type PreparedTrade,
+} from "../../lib/trade";
 import type {
   DZapSigner,
   TradeApprovalMode,
@@ -16,9 +20,9 @@ const TradeGasViem = () => {
   const { data: walletClient } = useWalletClient();
   const { switchChainAsync } = useSwitchChain();
 
-  const executeTrade = async (params: TradeParams) => {
+  const executeTrade = async (params: TradeParams, prepared: PreparedTrade) => {
     setIsLoading(true);
-    setStatus("Initializing trade...");
+    setStatus("Confirming trade...");
 
     if (!walletClient) {
       setStatus("Connect your wallet to continue");
@@ -31,9 +35,12 @@ const TradeGasViem = () => {
     try {
       await switchChainAsync({ chainId: params.fromChain });
 
-      setStatus("Getting quote...");
-
-      const result = await executeGasTrade(signer, params, approvalMode);
+      const result = await executeGasTrade(
+        signer,
+        params,
+        prepared,
+        approvalMode
+      );
       const message = formatTradeResult(result);
 
       if (result.status === "success") {
@@ -56,7 +63,7 @@ const TradeGasViem = () => {
     <TradePageLayout
       title="DZap Trade Gas (Viem)"
       description="Swap or bridge tokens using a viem wallet client via wagmi"
-      buttonLabel="Proceed"
+      buttonLabel="Confirm trade"
       isLoading={isLoading}
       status={status}
       onExecute={executeTrade}

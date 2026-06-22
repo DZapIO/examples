@@ -1,7 +1,11 @@
 import { ethers } from "ethers";
 import { useState } from "react";
 import { useSwitchChain } from "wagmi";
-import { executeGasTrade, formatTradeResult } from "../../lib/trade";
+import {
+  executeGasTrade,
+  formatTradeResult,
+  type PreparedTrade,
+} from "../../lib/trade";
 import type {
   DZapSigner,
   TradeApprovalMode,
@@ -16,9 +20,9 @@ const TradeGasEthers = () => {
   const [approvalMode, setApprovalMode] = useState<TradeApprovalMode>("default");
   const { switchChainAsync } = useSwitchChain();
 
-  const executeTrade = async (params: TradeParams) => {
+  const executeTrade = async (params: TradeParams, prepared: PreparedTrade) => {
     setIsLoading(true);
-    setStatus("Initializing trade...");
+    setStatus("Confirming trade...");
 
     if (!window.ethereum) {
       setStatus("No wallet detected — install MetaMask or another Web3 wallet");
@@ -33,9 +37,12 @@ const TradeGasEthers = () => {
       const ethersSigner = provider.getSigner();
       const signer = ethersSigner as DZapSigner;
 
-      setStatus("Getting quote...");
-
-      const result = await executeGasTrade(signer, params, approvalMode);
+      const result = await executeGasTrade(
+        signer,
+        params,
+        prepared,
+        approvalMode
+      );
       const message = formatTradeResult(result);
 
       if (result.status === "success") {
@@ -58,7 +65,7 @@ const TradeGasEthers = () => {
     <TradePageLayout
       title="DZap Trade Gas (Ethers)"
       description="Swap or bridge tokens using an ethers Signer — viem is recommended for new integrations"
-      buttonLabel="Proceed"
+      buttonLabel="Confirm trade"
       isLoading={isLoading}
       status={status}
       onExecute={executeTrade}

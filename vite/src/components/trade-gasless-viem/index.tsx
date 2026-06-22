@@ -3,10 +3,10 @@ import { useSwitchChain, useWalletClient } from "wagmi";
 import {
   executeGaslessTradeWithGasFallback,
   formatTradeResult,
+  type PreparedTrade,
 } from "../../lib/trade";
 import type { DZapSigner, TradeParams } from "../../types/trade";
 import TradePageLayout from "../TradePageLayout";
-
 
 // just for example
 const DEFAULT_QUOTE_OPTIONS = {
@@ -19,9 +19,9 @@ const Gasless = () => {
   const { data: walletClient } = useWalletClient();
   const { switchChainAsync } = useSwitchChain();
 
-  const executeTrade = async (params: TradeParams) => {
+  const executeTrade = async (params: TradeParams, prepared: PreparedTrade) => {
     setIsLoading(true);
-    setStatus("Initializing trade...");
+    setStatus("Confirming trade...");
 
     if (!walletClient) {
       setStatus("Connect your wallet to continue");
@@ -34,12 +34,10 @@ const Gasless = () => {
     try {
       await switchChainAsync({ chainId: params.fromChain });
 
-      setStatus("Getting quote...");
-
       const result = await executeGaslessTradeWithGasFallback(
         signer,
         params,
-        DEFAULT_QUOTE_OPTIONS
+        prepared
       );
 
       const message = formatTradeResult(result);
@@ -63,9 +61,10 @@ const Gasless = () => {
     <TradePageLayout
       title="DZap Gasless Trade"
       description="Swap or bridge tokens — gasless when the source token supports EIP-2612"
-      buttonLabel="Proceed"
+      buttonLabel="Confirm trade"
       isLoading={isLoading}
       status={status}
+      quoteOptions={DEFAULT_QUOTE_OPTIONS}
       onExecute={executeTrade}
     />
   );

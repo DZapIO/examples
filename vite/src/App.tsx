@@ -2,13 +2,21 @@ import { useState } from "react";
 import Gasless from "./components/trade-gasless-viem";
 import TradeGasEthers from "./components/trade-gas-ethers";
 import TradeGasViem from "./components/trade-gas-viem";
+import ZapIn from "./components/zap-in";
+import ZapOut from "./components/zap-out";
 
-type Page = "gasless" | "trade-gas-viem" | "trade-gas-ethers";
+type Page =
+  | "gasless"
+  | "trade-gas-viem"
+  | "trade-gas-ethers"
+  | "zap-in"
+  | "zap-out";
 
 const PAGES: { id: Page; label: string }[] = [
-  { id: "gasless", label: "Gasless" },
-  { id: "trade-gas-viem", label: "Trade Gas (Viem)" },
-  { id: "trade-gas-ethers", label: "Trade Gas (Ethers)" },
+  { id: "gasless", label: "Trade Gasless" },
+  { id: "trade-gas-viem", label: "Trade Gas" },
+  { id: "zap-in", label: "Zap In" },
+  { id: "zap-out", label: "Zap Out" },
 ];
 
 const App = () => {
@@ -39,6 +47,8 @@ const App = () => {
         {page === "gasless" && <Gasless />}
         {page === "trade-gas-viem" && <TradeGasViem />}
         {page === "trade-gas-ethers" && <TradeGasEthers />}
+        {page === "zap-in" && <ZapIn />}
+        {page === "zap-out" && <ZapOut />}
       </main>
     </div>
   );

@@ -1,8 +1,12 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import type { ReactNode } from "react";
 import { useEnforceSupportedChain } from "../hooks/useEnforceSupportedChain";
-import TradeForm from "./TradeForm";
+import { useTradeQuote } from "../hooks/useTradeQuote";
 import { useTradeSelection } from "../hooks/useTradeSelection";
+import type { PreparedTrade } from "../lib/trade";
+import type { TradeParams, TradeQuoteOptions } from "../types/trade";
+import TradeForm from "./TradeForm";
+import TradeQuotePanel from "./TradeQuotePanel";
 
 type TradePageLayoutProps = {
   title: string;
@@ -10,9 +14,9 @@ type TradePageLayoutProps = {
   buttonLabel: string;
   isLoading: boolean;
   status: string;
-  onExecute: (tradeParams: NonNullable<
-    ReturnType<typeof useTradeSelection>["tradeParams"]
-  >) => void;
+  /** Optional quote filters (e.g. the gasless page denies certain DEXes). */
+  quoteOptions?: TradeQuoteOptions;
+  onExecute: (params: TradeParams, prepared: PreparedTrade) => void;
   extraControls?: ReactNode;
 };
 
@@ -22,15 +26,22 @@ const TradePageLayout = ({
   buttonLabel,
   isLoading,
   status,
+  quoteOptions,
   onExecute,
   extraControls,
 }: TradePageLayoutProps) => {
   const { isSwitchingChain } = useEnforceSupportedChain();
   const selection = useTradeSelection();
+  const {
+    prepared,
+    loading: quoteLoading,
+    error: quoteError,
+  } = useTradeQuote(selection.tradeParams, quoteOptions);
 
   const canProceed =
     selection.isConnected &&
-    selection.isFormComplete &&
+    Boolean(prepared) &&
+    !quoteLoading &&
     !isLoading &&
     !isSwitchingChain;
 
@@ -60,38 +71,21 @@ const TradePageLayout = ({
             )}
 
             <TradeForm
-              sourceChainId={selection.sourceChainId}
-              destChainId={selection.destChainId}
-              balanceTokens={selection.balanceTokens}
-              destTokens={selection.destTokens}
-              loadingBalances={selection.loadingBalances}
-              loadingDestTokens={selection.loadingDestTokens}
-              fetchError={selection.fetchError}
-              srcTokenAddress={selection.srcTokenAddress}
-              destTokenAddress={selection.destTokenAddress}
-              onSrcTokenChange={selection.setSrcTokenAddress}
-              onDestTokenChange={selection.setDestTokenAddress}
-              onSourceChainChange={selection.handleSourceChainChange}
-              onDestChainChange={selection.handleDestChainChange}
-              amountPreset={selection.amountPreset}
-              onAmountPresetChange={selection.setAmountPreset}
-              customAmount={selection.customAmount}
-              onCustomAmountChange={selection.setCustomAmount}
-              amountError={selection.amountError}
-              formattedBalance={selection.formattedBalance}
-              selectedSrcToken={selection.selectedSrcToken}
+              selection={selection}
               disabled={isLoading || isSwitchingChain}
             />
 
             {extraControls}
+
+            {prepared && <TradeQuotePanel quote={prepared.quote} />}
           </>
         )}
 
         <button
           type="button"
           onClick={() => {
-            if (selection.tradeParams) {
-              onExecute(selection.tradeParams);
+            if (selection.tradeParams && prepared) {
+              onExecute(selection.tradeParams, prepared);
             }
           }}
           disabled={!canProceed}
@@ -101,12 +95,18 @@ const TradePageLayout = ({
               : "bg-gray-400 cursor-not-allowed"
           }`}
         >
-          {isLoading ? "Processing..." : buttonLabel}
+          {isLoading
+            ? "Processing..."
+            : quoteLoading
+              ? "Fetching quote…"
+              : buttonLabel}
         </button>
 
-        {status && (
+        {(quoteError || status) && (
           <div className="mt-4 p-3 rounded-lg bg-gray-50 border">
-            <p className="text-sm text-gray-700 break-words">{status}</p>
+            <p className="text-sm text-gray-700 break-words">
+              {quoteError || status}
+            </p>
           </div>
         )}
       </div>

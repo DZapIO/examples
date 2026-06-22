@@ -71,6 +71,30 @@ export async function fetchQuoteAndProtocol(
   return { quote, protocol };
 }
 
+/** A quote paired with its request legs, ready to show and then execute. */
+export type PreparedTrade = {
+  requestData: TradeRequestData[];
+  quote: SelectedTradeQuote;
+  protocol: string;
+};
+
+/**
+ * Quote step — build the legs and fetch the recommended quote. Read-only: no
+ * approvals or signatures. Run this before confirming the trade.
+ */
+export async function prepareTrade(
+  params: TradeParams,
+  quoteOptions?: TradeQuoteOptions
+): Promise<PreparedTrade> {
+  const requestData = buildTradeRequestData(params);
+  const { quote, protocol } = await fetchQuoteAndProtocol(
+    params,
+    requestData,
+    quoteOptions
+  );
+  return { requestData, quote, protocol };
+}
+
 /**
  * Step 3 — Attach protocol, permit signature, and quote metadata to each leg.
  */
@@ -97,19 +121,26 @@ export function buildTradeTxnRequest(
   };
 }
 
-function extractPermitSignature(
-  response: SignPermitResponse
-): HexString | undefined {
+/**
+ * Read the permit out of a signature response, throwing if the signature
+ * failed or returned nothing — so a rejected permit stops the trade here
+ * instead of failing later in the build with a confusing error.
+ */
+function getPermitDataOrThrow(response: SignPermitResponse): HexString {
   if (response.status !== TxnStatus.success || !("tokens" in response)) {
-    return undefined;
+    throw new Error(`Permit signature failed (code ${response.code})`);
   }
-  return response.tokens[0]?.permitData;
+  const permitData = response.tokens[0]?.permitData;
+  if (!permitData) {
+    throw new Error("Permit signature returned no permit data");
+  }
+  return permitData;
 }
 
 export async function signEIP2612Permit(
   signer: DZapSigner,
   params: TradeParams
-): Promise<HexString | undefined> {
+): Promise<HexString> {
   const response = await dZap.sign({
     chainId: params.fromChain,
     sender: params.account,
@@ -119,7 +150,7 @@ export async function signEIP2612Permit(
     permitType: PermitTypes.EIP2612Permit,
   });
 
-  return extractPermitSignature(response);
+  return getPermitDataOrThrow(response);
 }
 
 export async function approveForPermit2(
@@ -141,19 +172,24 @@ export async function approveForPermit2(
   if (!approvalNeeded) {
     return;
   }
-  await dZap.approve({
+  const result = await dZap.approve({
     chainId: params.fromChain,
     service: Services.trade,
     signer,
     tokens: [{ address: params.srcToken, amount: params.amount }],
     mode: ApprovalModes.PermitSingle,
   });
+
+  // Abort the trade if the approval did not go through (e.g. user rejected).
+  if (result.status !== TxnStatus.success) {
+    throw new Error(`Permit2 approval failed (code ${result.code})`);
+  }
 }
 
 export async function signPermit2Single(
   signer: DZapSigner,
   params: TradeParams
-): Promise<HexString | undefined> {
+): Promise<HexString> {
   const response = await dZap.sign({
     chainId: params.fromChain,
     sender: params.account,
@@ -163,20 +199,25 @@ export async function signPermit2Single(
     permitType: PermitTypes.PermitSingle,
   });
 
-  return extractPermitSignature(response);
+  return getPermitDataOrThrow(response);
 }
 
 /** Execute via relayer using an EIP-2612 permit (no approval tx). */
 export async function executeGaslessTrade(
   signer: DZapSigner,
   params: TradeParams,
-  requestData: TradeRequestData[],
-  quote: SelectedTradeQuote
+  prepared: PreparedTrade
 ): Promise<DZapTransactionResponse> {
   const permitData = await signEIP2612Permit(signer, params);
 
   return dZap.tradeGasless({
-    request: buildTradeTxnRequest(requestData, quote, permitData, params, true),
+    request: buildTradeTxnRequest(
+      prepared.requestData,
+      prepared.quote,
+      permitData,
+      params,
+      true
+    ),
     signer,
   });
 }
@@ -185,16 +226,15 @@ export async function executeGaslessTrade(
 export async function executeTradeWithPermit2(
   signer: DZapSigner,
   params: TradeParams,
-  requestData: TradeRequestData[],
-  quote: SelectedTradeQuote
+  prepared: PreparedTrade
 ): Promise<DZapTransactionResponse> {
   await approveForPermit2(signer, params);
   const permitData = await signPermit2Single(signer, params);
 
   return dZap.trade({
     request: buildTradeTxnRequest(
-      requestData,
-      quote,
+      prepared.requestData,
+      prepared.quote,
       permitData,
       params,
       false
@@ -229,37 +269,34 @@ export async function ensureDefaultApproval(
     return;
   }
 
-  await dZap.approve({
+  const result = await dZap.approve({
     chainId: params.fromChain,
     signer,
     tokens: [{ address: params.srcToken, amount: params.amount }],
     service: Services.trade,
     mode: ApprovalModes.Default,
   });
+
+  // Abort the trade if the approval did not go through (e.g. user rejected).
+  if (result.status !== TxnStatus.success) {
+    throw new Error(`Approval failed (code ${result.code})`);
+  }
 }
 
 /**
- * Gas-backed trade (viem or ethers signer).
- * Quote → authorize source token → execute on-chain trade.
+ * Gas-backed trade (viem or ethers signer) from an already-fetched quote.
  *
  * - `default` — ERC-20 approve when allowance is insufficient
- * - `permit2` — Permit2 approval + PermitSingle signature (gasless fallback path)
+ * - `permit2` — Permit2 approval + PermitSingle signature
  */
 export async function executeGasTrade(
   signer: DZapSigner,
   params: TradeParams,
-  approvalMode: TradeApprovalMode,
-  quoteOptions?: TradeQuoteOptions
+  prepared: PreparedTrade,
+  approvalMode: TradeApprovalMode
 ): Promise<DZapTransactionResponse> {
-  const requestData = buildTradeRequestData(params);
-  const { quote, protocol } = await fetchQuoteAndProtocol(
-    params,
-    requestData,
-    quoteOptions
-  );
-
   if (approvalMode === "permit2") {
-    return executeTradeWithPermit2(signer, params, requestData, quote);
+    return executeTradeWithPermit2(signer, params, prepared);
   }
 
   await ensureDefaultApproval(signer, params);
@@ -272,13 +309,13 @@ export async function executeGasTrade(
       gasless: false,
       data: [
         {
-          amount: quote.srcAmount,
-          srcToken: quote.srcToken.address,
-          srcDecimals: quote.srcToken.decimals,
-          destToken: quote.destToken.address,
-          destDecimals: quote.destToken.decimals,
+          amount: prepared.quote.srcAmount,
+          srcToken: prepared.quote.srcToken.address,
+          srcDecimals: prepared.quote.srcToken.decimals,
+          destToken: prepared.quote.destToken.address,
+          destDecimals: prepared.quote.destToken.decimals,
           toChain: params.toChain,
-          protocol,
+          protocol: prepared.protocol,
           recipient: params.account,
           slippage: params.slippage,
         },
@@ -297,22 +334,20 @@ export function formatTradeResult(result: DZapTransactionResponse): string {
 }
 
 /**
- * End-to-end trade — quote, then execute gasless or fall back to gas-backed.
- * Works for same-chain swaps and cross-chain bridges.
+ * Gasless trade from an already-fetched quote — uses the relayer when the
+ * source token supports EIP-2612, otherwise falls back to a Permit2 trade.
  */
 export async function executeGaslessTradeWithGasFallback(
   signer: DZapSigner,
   params: TradeParams,
-  quoteOptions?: TradeQuoteOptions
+  prepared: PreparedTrade
 ): Promise<DZapTransactionResponse> {
-  const requestData = buildTradeRequestData(params);
-
-  const [{ quote }, supportsGasless] = await Promise.all([
-    fetchQuoteAndProtocol(params, requestData, quoteOptions),
-    isGaslessSupportedToken(params.srcToken, params.fromChain),
-  ]);
+  const supportsGasless = await isGaslessSupportedToken(
+    params.srcToken,
+    params.fromChain
+  );
 
   return supportsGasless
-    ? executeGaslessTrade(signer, params, requestData, quote)
-    : executeTradeWithPermit2(signer, params, requestData, quote);
+    ? executeGaslessTrade(signer, params, prepared)
+    : executeTradeWithPermit2(signer, params, prepared);
 }
