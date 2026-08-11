@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import type { ZapQuoteWithRequest } from "../lib/zap";
 
 /**
- * Fetches a zap quote whenever the (memoized) params change. Returns the
- * prepared request + quote, plus loading/error state, so the page can show the
- * quote and only then enable the confirm button.
+ * Fetches a quote whenever the (memoized) params change. Returns the prepared
+ * request + quote, plus loading/error state, so the page can show the quote
+ * and only then enable the confirm button. Generic over the prepared result
+ * shape so both single-route (zap) and bundle (borrow) quotes can share it.
  */
-export function useZapQuote<TParams>(
+export function useZapQuote<TParams, TPrepared>(
   params: TParams | null,
-  prepare: (params: TParams) => Promise<ZapQuoteWithRequest>
+  prepare: (params: TParams) => Promise<TPrepared>
 ) {
-  const [prepared, setPrepared] = useState<ZapQuoteWithRequest | null>(null);
+  const [prepared, setPrepared] = useState<TPrepared | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
