@@ -1,9 +1,11 @@
-import type { TokenInfo } from "@dzapio/sdk";
 import type { AmountPreset } from "../../types/amount";
 
 type AmountFieldProps = {
-  token: TokenInfo;
+  /** Ticker of the asset being spent — a token symbol, or a position's name. */
+  symbol: string;
   formattedBalance: string;
+  /** What the balance line calls the amount held, e.g. "Balance" or "Position". */
+  balanceLabel?: string;
   preset: AmountPreset;
   onPresetChange: (preset: AmountPreset) => void;
   customAmount: string;
@@ -12,10 +14,11 @@ type AmountFieldProps = {
   disabled?: boolean;
 };
 
-/** 50% / 100% / custom amount picker for the source token. */
+/** 50% / 100% / custom amount picker for the source asset. */
 const AmountField = ({
-  token,
+  symbol,
   formattedBalance,
+  balanceLabel = "Balance",
   preset,
   onPresetChange,
   customAmount,
@@ -27,7 +30,7 @@ const AmountField = ({
     <legend className="mb-1.5 flex w-full items-baseline justify-between text-xs font-semibold uppercase tracking-wide text-gray-500">
       <span>Amount</span>
       <span className="font-medium normal-case tracking-normal text-gray-400">
-        Balance: {formattedBalance} {token.symbol}
+        {balanceLabel}: {formattedBalance} {symbol}
       </span>
     </legend>
     <div className="grid grid-cols-3 gap-2 mb-2">
@@ -50,7 +53,7 @@ const AmountField = ({
       <input
         type="text"
         inputMode="decimal"
-        placeholder={`Enter amount in ${token.symbol}`}
+        placeholder={`Enter amount in ${symbol}`}
         value={customAmount}
         onChange={(event) => onCustomAmountChange(event.target.value)}
         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"

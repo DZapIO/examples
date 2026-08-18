@@ -14,6 +14,36 @@ const POOLS_PAGE_SIZE = 50;
 const DEFAULT_RANGE_SPACINGS = 50;
 
 /**
+ * The provider registry carries which actions and chains each protocol supports,
+ * but this SDK build's `ProviderDetails` type predates those fields — they are
+ * present at runtime (see the backend's /config/providers), just untyped here.
+ */
+type ProtocolWithSupport = ZapProtocol & {
+  supportedActions?: string[];
+  supportedChainIds?: number[];
+};
+
+/**
+ * Protocols that support a specific action on a chain — e.g. every lending
+ * market offering `borrow`, or every venue offering `limitOrder`. Lets a form
+ * offer real protocol choices instead of asking for a pasted address.
+ */
+export async function fetchProtocolsForAction(
+  chainId: number,
+  action: string
+): Promise<ZapProtocol[]> {
+  const providers = await dZap.getZapProviders();
+
+  return Object.values(providers).filter((provider) => {
+    const { supportedActions, supportedChainIds } =
+      provider as ProtocolWithSupport;
+    return Boolean(
+      supportedActions?.includes(action) && supportedChainIds?.includes(chainId)
+    );
+  });
+}
+
+/**
  * Protocols (providers) that support zaps on a given chain.
  * Combines the chain → provider-id map with the provider details registry.
  */

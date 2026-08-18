@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@dzapio/sdk':
-        specifier: 2.0.39
-        version: 2.0.39(bufferutil@4.0.9)(expo@56.0.9)(react-native@0.86.0(@babel/core@7.28.0)(@types/react@18.3.23)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@6.0.6))(typescript@5.9.2)(utf-8-validate@6.0.6)(zod@3.25.76)
+        specifier: file:.yalc/@dzapio/sdk
+        version: file:.yalc/@dzapio/sdk(bufferutil@4.0.9)(expo@56.0.9)(react-native@0.86.0(@babel/core@7.28.0)(@types/react@18.3.23)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@6.0.6))(typescript@5.9.2)(utf-8-validate@6.0.6)(zod@3.25.76)
       '@wagmi/core':
         specifier: 3.4.0
         version: 3.4.0(@tanstack/query-core@5.83.1)(@types/react@18.3.23)(ox@0.14.20(typescript@5.9.2)(zod@3.25.76))(react@18.3.1)(typescript@5.9.2)(use-sync-external-store@1.5.0(react@18.3.1))(viem@2.46.3(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@6.0.6)(zod@3.25.76))
@@ -531,8 +531,8 @@ packages:
   '@coinbase/wallet-sdk@4.3.6':
     resolution: {integrity: sha512-4q8BNG1ViL4mSAAvPAtpwlOs1gpC+67eQtgIwNvT3xyeyFFd+guwkc8bcX5rTmQhXpqnhzC4f0obACbP9CqMSA==}
 
-  '@dzapio/sdk@2.0.39':
-    resolution: {integrity: sha512-4VKvnBflrcSeKC5MhlYWZZwKEKqUgh0iWrMmY3JUNp/ObKYGvKg+qut7BbolbgF71f6RZ79M+jvDKs5ziGAAyQ==}
+  '@dzapio/sdk@file:.yalc/@dzapio/sdk':
+    resolution: {directory: .yalc/@dzapio/sdk, type: directory}
     engines: {node: '>=16.0.0'}
 
   '@emotion/hash@0.9.2':
@@ -5703,6 +5703,7 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   validate-npm-package-name@5.0.1:
@@ -6650,7 +6651,7 @@ snapshots:
       - zod
     optional: true
 
-  '@dzapio/sdk@2.0.39(bufferutil@4.0.9)(expo@56.0.9)(react-native@0.86.0(@babel/core@7.28.0)(@types/react@18.3.23)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@6.0.6))(typescript@5.9.2)(utf-8-validate@6.0.6)(zod@3.25.76)':
+  '@dzapio/sdk@file:.yalc/@dzapio/sdk(bufferutil@4.0.9)(expo@56.0.9)(react-native@0.86.0(@babel/core@7.28.0)(@types/react@18.3.23)(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@6.0.6))(typescript@5.9.2)(utf-8-validate@6.0.6)(zod@3.25.76)':
     dependencies:
       '@solana/web3.js': 1.95.8(bufferutil@4.0.9)(utf-8-validate@6.0.6)
       axios: 1.11.0
@@ -8995,7 +8996,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 12.20.55
+      '@types/node': 25.9.2
 
   '@types/estree@1.0.8': {}
 
@@ -9036,7 +9037,7 @@ snapshots:
 
   '@types/ws@7.4.7':
     dependencies:
-      '@types/node': 12.20.55
+      '@types/node': 25.9.2
 
   '@types/ws@8.18.1':
     dependencies:
