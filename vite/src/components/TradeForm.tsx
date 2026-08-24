@@ -25,7 +25,7 @@ const TradeForm = ({ selection, disabled = false }: TradeFormProps) => (
 
     {selection.selectedSrcToken && (
       <AmountField
-        token={selection.selectedSrcToken}
+        symbol={selection.selectedSrcToken.symbol}
         formattedBalance={selection.formattedBalance}
         preset={selection.amountPreset}
         onPresetChange={selection.setAmountPreset}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Borrow from "./components/borrow";
+import LimitOrder from "./components/limit-order";
 import Gasless from "./components/trade-gasless-viem";
 import TradeGasEthers from "./components/trade-gas-ethers";
 import TradeGasViem from "./components/trade-gas-viem";
@@ -12,7 +13,8 @@ type Page =
   | "trade-gas-ethers"
   | "zap-in"
   | "zap-out"
-  | "borrow";
+  | "borrow"
+  | "limit-order";
 
 const PAGES: { id: Page; label: string }[] = [
   { id: "gasless", label: "Trade Gasless" },
@@ -20,6 +22,7 @@ const PAGES: { id: Page; label: string }[] = [
   { id: "zap-in", label: "Zap In" },
   { id: "zap-out", label: "Zap Out" },
   { id: "borrow", label: "Borrow" },
+  { id: "limit-order", label: "Limit Order" },
 ];
 
 const App = () => {
@@ -53,6 +56,7 @@ const App = () => {
         {page === "zap-in" && <ZapIn />}
         {page === "zap-out" && <ZapOut />}
         {page === "borrow" && <Borrow />}
+        {page === "limit-order" && <LimitOrder />}
       </main>
     </div>
   );

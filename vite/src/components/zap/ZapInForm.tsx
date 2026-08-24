@@ -26,7 +26,7 @@ const ZapInForm = ({ selection, disabled = false }: ZapInFormProps) => (
 
     {selection.selectedSrcToken && (
       <AmountField
-        token={selection.selectedSrcToken}
+        symbol={selection.selectedSrcToken.symbol}
         formattedBalance={selection.formattedBalance}
         preset={selection.amountPreset}
         onPresetChange={selection.setAmountPreset}
