@@ -30,3 +30,6 @@ dist-ssr
 # Testing Environments
 .yalc
 yalc.lock
+
+
+docs/
