@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
+import { useSwitchChain, useWalletClient } from "wagmi";
 import { useLimitOrderSelection } from "../../hooks/useLimitOrderSelection";
 import { useZapQuote } from "../../hooks/useZapQuote";
 import {
@@ -7,6 +7,7 @@ import {
   fetchLimitOrderQuote,
   formatLimitOrderResult,
 } from "../../lib/limitOrder";
+import type { DZapSigner } from "../../types/zap";
 import ZapPageLayout from "../zap/ZapPageLayout";
 import ZapQuotePanel from "../zap/ZapQuotePanel";
 import LimitOrderForm from "./LimitOrderForm";
@@ -15,7 +16,6 @@ const LimitOrder = () => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [status, setStatus] = useState("");
   const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
   const { switchChainAsync } = useSwitchChain();
 
   const selection = useLimitOrderSelection();
@@ -40,11 +40,10 @@ const LimitOrder = () => {
       // tokens without EIP-2612), then the order signature. Nothing is broadcast
       // from the wallet — the signed order goes to the backend, which relays it
       // to the venue's orderbook where it rests until a taker fills it.
+      setStatus("Signing and submitting the order…");
       const result = await executeLimitOrder(
-        walletClient,
-        selection.limitOrderParams,
-        prepared,
-        { publicClient, onStatus: setStatus }
+        walletClient as DZapSigner,
+        prepared
       );
       const message = formatLimitOrderResult(result);
       setStatus(message);

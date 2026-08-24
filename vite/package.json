@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@dzapio/sdk": "file:.yalc/@dzapio/sdk",
+    "@dzapio/sdk": "2.0.39",
     "@wagmi/core": "3.4.0",
     "ethers": "5.7.2",
     "react": "^18.2.0",
